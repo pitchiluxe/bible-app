@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+*.log
+.env
+.env.*
+.vercel
+
+# installer binaries are published as GitHub Release assets, not committed
+landing/*.exe
+landing/latest.yml
+
+# stray duplicate copies
+* (2).*

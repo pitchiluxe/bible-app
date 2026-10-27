@@ -1,0 +1,29 @@
+{
+  "translation": "WEB-KIDS",
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Genesis",
+      "testament": "OT",
+      "slug": "genesis",
+      "chapters": 11,
+      "enName": "Genesis"
+    },
+    {
+      "id": "MAT",
+      "name": "Matthew",
+      "testament": "NT",
+      "slug": "matthew",
+      "chapters": 8,
+      "enName": "Matthew"
+    },
+    {
+      "id": "JHN",
+      "name": "John",
+      "testament": "NT",
+      "slug": "john",
+      "chapters": 21,
+      "enName": "John"
+    }
+  ]
+}

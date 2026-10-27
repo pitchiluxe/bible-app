@@ -1,0 +1,29 @@
+{
+  "translation": "LSG-KIDS",
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Genèse",
+      "testament": "OT",
+      "slug": "genesis",
+      "chapters": 11,
+      "enName": "Genesis"
+    },
+    {
+      "id": "MAT",
+      "name": "Matthieu",
+      "testament": "NT",
+      "slug": "matthew",
+      "chapters": 8,
+      "enName": "Matthew"
+    },
+    {
+      "id": "JHN",
+      "name": "Jean",
+      "testament": "NT",
+      "slug": "john",
+      "chapters": 21,
+      "enName": "John"
+    }
+  ]
+}

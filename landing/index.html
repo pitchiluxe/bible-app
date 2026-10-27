@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bible App — Read Scripture. Anywhere. Always.</title>
+  <meta name="description" content="A beautiful, offline Bible reader with AI study companion, verse memorisation, and Gospel music. Free forever." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0a0a0f;
+      --bg-mid:       #0e0e16;
+      --bg-card:      rgba(255,255,255,0.04);
+      --border:       rgba(255,255,255,0.07);
+      --crimson:      #8B1A1A;
+      --crimson-deep: #5c0f0f;
+      --gold:         #C9A84C;
+      --gold-light:   #F0C060;
+      --gold-bright:  #FFD700;
+      --cream:        #F5E6C8;
+      --muted:        #9A8570;
+      --muted-dark:   #5a4e42;
+      --font-serif:   'Playfair Display', Georgia, serif;
+      --font-sans:    'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--cream);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ─── Utility ──────────────────────────────────────────────────── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--crimson) 0%, var(--gold) 55%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── Scroll Reveal ────────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ─── Particles Background ─────────────────────────────────────── */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0;
+      animation: twinkle var(--dur, 4s) ease-in-out var(--del, 0s) infinite;
+    }
+
+    @keyframes twinkle {
+      0%,100% { opacity: 0; transform: scale(0.5); }
+      50%      { opacity: var(--max-op, 0.55); transform: scale(1.4); }
+    }
+
+    /* ─── Navigation ───────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 1rem 0;
+      background: rgba(10, 10, 15, 0.65);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s ease;
+    }
+
+    nav .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      position: relative;
+      width: 38px;
+      height: 38px;
+    }
+
+    /* Cross SVG icon inline via CSS shapes */
+    .nav-logo-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--crimson), var(--gold));
+      border-radius: 8px;
+      box-shadow: 0 0 18px rgba(201,168,76,0.35);
+    }
+
+    .nav-logo-icon::after {
+      content: '✝';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--cream);
+      line-height: 38px;
+      text-align: center;
+    }
+
+    .nav-logo-text {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: 0.02em;
+    }
+
+    .nav-logo-text span {
+      color: var(--gold);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      transition: color 0.25s;
+    }
+
+    .nav-links a:hover { color: var(--cream); }
+
+    .btn-nav-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.35rem;
+      border: 1.5px solid var(--gold);
+      border-radius: 8px;
+      color: var(--gold) !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: background 0.25s, box-shadow 0.25s, color 0.25s !important;
+    }
+
+    .btn-nav-download:hover {
+      background: rgba(201,168,76,0.12);
+      box-shadow: 0 0 18px rgba(201,168,76,0.3);
+      color: var(--gold-bright) !important;
+    }
+
+    /* ─── Hero Section ─────────────────────────────────────────────── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 7rem 2rem 4rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* Radial glow behind the book */
+    #hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -52%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(ellipse at center,
+        rgba(139,26,26,0.22) 0%,
+        rgba(201,168,76,0.08) 45%,
+        transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── Bible Book Mockup ── */
+    .bible-mockup {
+      position: relative;
+      width: 180px;
+      height: 240px;
+      margin-bottom: 3rem;
+      animation: floatBook 5s ease-in-out infinite;
+      filter: drop-shadow(0 30px 60px rgba(139,26,26,0.55)) drop-shadow(0 0 40px rgba(201,168,76,0.25));
+    }
+
+    @keyframes floatBook {
+      0%,100% { transform: translateY(0px) rotateY(-8deg) rotateX(4deg); }
+      50%      { transform: translateY(-18px) rotateY(-8deg) rotateX(4deg); }
+    }
+
+    /* Book cover (front face) */
+    .book-cover {
+      position: absolute;
+      inset: 0;
+      border-radius: 4px 12px 12px 4px;
+      background: linear-gradient(160deg, #5c0f0f 0%, #3a0808 40%, #2a0505 100%);
+      box-shadow:
+        inset -4px 0 8px rgba(0,0,0,0.5),
+        inset 0 0 0 1px rgba(201,168,76,0.15);
+    }
+
+    /* Gold border ornament */
+    .book-cover::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border: 1.5px solid rgba(201,168,76,0.45);
+      border-radius: 2px 8px 8px 2px;
+    }
+
+    /* Cross on cover */
+    .book-cross {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -55%);
+    }
+
+    .book-cross-v {
+      position: absolute;
+      width: 3px;
+      height: 60px;
+      background: linear-gradient(180deg, var(--gold-light), var(--gold));
+      border-radius: 2px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 12px rgba(201,168,76,0.6);
+    }
+
+    .book-cross-h {
+      position: absolute;
+      width: 38px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-light), var(--gold));
+      border-radius: 2px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -140%);
+      box-shadow: 0 0 12px rgba(201,168,76,0.6);
+    }
+
+    /* Book title text on cover */
+    .book-title-text {
+      position: absolute;
+      bottom: 32px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: var(--font-serif);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    /* Book spine */
+    .book-spine {
+      position: absolute;
+      left: -18px;
+      top: 6px;
+      bottom: 6px;
+      width: 18px;
+      background: linear-gradient(90deg, #1a0303 0%, #2d0707 100%);
+      border-radius: 4px 0 0 4px;
+      box-shadow: -4px 0 12px rgba(0,0,0,0.6);
+    }
+
+    .book-spine::after {
+      content: '';
+      position: absolute;
+      inset: 0 0 0 4px;
+      background: linear-gradient(90deg, rgba(201,168,76,0.1), transparent);
+    }
+
+    /* Page edges (right side — stacked pages illusion) */
+    .book-pages {
+      position: absolute;
+      right: -8px;
+      top: 4px;
+      bottom: 4px;
+      width: 10px;
+      background: repeating-linear-gradient(
+        180deg,
+        #e8d9bc 0px, #e8d9bc 1.5px,
+        #c9b898 1.5px, #c9b898 3px
+      );
+      border-radius: 0 3px 3px 0;
+      opacity: 0.7;
+    }
+
+    /* Bookmark ribbon */
+    .book-ribbon {
+      position: absolute;
+      top: -2px;
+      right: 28px;
+      width: 10px;
+      height: 70px;
+      background: linear-gradient(180deg, #c0392b, #8b1a1a);
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+      box-shadow: 0 4px 12px rgba(139,26,26,0.5);
+    }
+
+    /* Glow halo ring */
+    .book-glow-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 260px;
+      height: 320px;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow:
+        0 0 60px rgba(201,168,76,0.12),
+        0 0 120px rgba(139,26,26,0.12);
+      pointer-events: none;
+    }
+
+    /* ── Hero Text ── */
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 1rem;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.6); }
+      50%      { box-shadow: 0 0 0 5px rgba(201,168,76,0); }
+    }
+
+    .hero-headline {
+      font-family: var(--font-serif);
+      font-size: clamp(3rem, 7vw, 5rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: var(--cream);
+      margin-bottom: 1.5rem;
+      max-width: 760px;
+    }
+
+    .hero-headline .line2 {
+      display: block;
+      background: linear-gradient(135deg, var(--crimson) 0%, var(--gold) 60%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 2.75rem;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* Primary CTA — gold gradient */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      background: linear-gradient(135deg, var(--crimson) 0%, #b5862e 50%, var(--gold) 100%);
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.975rem;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      box-shadow:
+        0 4px 20px rgba(139,26,26,0.45),
+        0 0 0 1px rgba(201,168,76,0.2);
+      transition: transform 0.2s ease, box-shadow 0.3s ease, filter 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 30px rgba(139,26,26,0.55),
+        0 0 40px rgba(201,168,76,0.35),
+        0 0 0 1px rgba(201,168,76,0.4);
+      filter: brightness(1.1);
+    }
+
+    .btn-primary:hover::before { opacity: 1; }
+
+    .btn-primary .icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* Secondary CTA */
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      color: var(--cream);
+      font-weight: 600;
+      font-size: 0.975rem;
+      text-decoration: none;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      transition: border-color 0.25s, background 0.25s, transform 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(201,168,76,0.35);
+      background: rgba(201,168,76,0.06);
+      transform: translateY(-2px);
+    }
+
+    /* ─── Section Common ────────────────────────────────────────────── */
+    .section {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 0;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .section-label::before,
+    .section-label::after {
+      content: '';
+      display: block;
+      width: 28px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.5;
+    }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--cream);
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 540px;
+      line-height: 1.7;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header .section-subtitle {
+      margin: 0 auto;
+    }
+
+    /* Horizontal divider */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0;
+    }
+
+    /* ─── Feature Cards ─────────────────────────────────────────────── */
+    #features {
+      background: var(--bg-mid);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      position: relative;
+      padding: 2rem 1.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.35s ease, border-color 0.3s ease;
+      cursor: default;
+    }
+
+    /* Top shimmer line */
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.4) 50%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    /* Radial glow on hover */
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 60% 0%, rgba(201,168,76,0.06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(201,168,76,0.25);
+      box-shadow:
+        0 16px 40px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(201,168,76,0.1),
+        0 0 60px rgba(201,168,76,0.07);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover::after  { opacity: 1; }
+
+    .card-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(139,26,26,0.35) 0%, rgba(201,168,76,0.12) 100%);
+      border: 1px solid rgba(201,168,76,0.18);
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 0.65rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── Download Section ──────────────────────────────────────────── */
+    #download {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #download::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 900px;
+      background: radial-gradient(ellipse at center,
+        rgba(139,26,26,0.15) 0%,
+        rgba(201,168,76,0.05) 40%,
+        transparent 65%);
+      pointer-events: none;
+    }
+
+    .download-card {
+      position: relative;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 3.5rem 3rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      text-align: center;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,0.06),
+        0 40px 80px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .download-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20%;
+      right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.45), transparent);
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      margin-bottom: 2rem;
+    }
+
+    .version-badge .badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .download-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 0.75rem;
+    }
+
+    .download-tagline {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+    }
+
+    /* Big download button */
+    .btn-download-big {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 1.1rem 2.75rem;
+      background: linear-gradient(135deg, var(--crimson-deep) 0%, var(--crimson) 40%, #b5862e 75%, var(--gold) 100%);
+      border-radius: 14px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.35s, filter 0.25s;
+      box-shadow:
+        0 6px 24px rgba(139,26,26,0.5),
+        0 0 0 1px rgba(201,168,76,0.25);
+    }
+
+    .btn-download-big .dl-main {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-download-big .dl-arrow {
+      font-size: 1.1rem;
+      display: inline-block;
+      animation: bounce-arrow 1.8s ease-in-out infinite;
+    }
+
+    @keyframes bounce-arrow {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(3px); }
+    }
+
+    .btn-download-big .dl-sub {
+      font-size: 0.75rem;
+      font-weight: 400;
+      opacity: 0.75;
+      letter-spacing: 0.04em;
+    }
+
+    /* Shimmer sweep */
+    .btn-download-big::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -120%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.6s ease;
+    }
+
+    .btn-download-big:hover {
+      transform: translateY(-3px);
+      filter: brightness(1.12) saturate(1.15);
+      box-shadow:
+        0 10px 40px rgba(139,26,26,0.6),
+        0 0 60px rgba(201,168,76,0.3),
+        0 0 0 1px rgba(201,168,76,0.45);
+    }
+
+    .btn-download-big:hover::after { left: 160%; }
+
+    /* Pulsing glow ring on hover */
+    .btn-download-big:hover {
+      animation: download-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes download-pulse {
+      0%,100% { box-shadow: 0 10px 40px rgba(139,26,26,0.6), 0 0 50px rgba(201,168,76,0.2), 0 0 0 1px rgba(201,168,76,0.4); }
+      50%      { box-shadow: 0 12px 50px rgba(139,26,26,0.65), 0 0 75px rgba(201,168,76,0.35), 0 0 0 1px rgba(201,168,76,0.5); }
+    }
+
+    .sys-requirements {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem 1.5rem;
+    }
+
+    .sys-req-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.82rem;
+      color: var(--muted-dark);
+    }
+
+    .sys-req-item .req-icon {
+      color: var(--gold);
+      opacity: 0.6;
+      font-size: 0.8rem;
+    }
+
+    .auto-update-note {
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--muted-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .auto-update-note::before {
+      content: '↻';
+      color: var(--gold);
+      opacity: 0.5;
+    }
+
+    /* ─── Footer ────────────────────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 2.5rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .footer-logo .cross-tiny {
+      color: var(--gold);
+      opacity: 0.6;
+      font-size: 1rem;
+    }
+
+    .footer-copy {
+      font-size: 0.82rem;
+      color: var(--muted-dark);
+      letter-spacing: 0.02em;
+    }
+
+    .footer-copy .heart {
+      color: var(--crimson);
+      animation: heartbeat 2.4s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes heartbeat {
+      0%,100% { transform: scale(1); }
+      10%      { transform: scale(1.25); }
+      20%      { transform: scale(1); }
+      30%      { transform: scale(1.15); }
+      40%      { transform: scale(1); }
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.75rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 0.82rem;
+      color: var(--muted-dark);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--gold); }
+
+    /* ─── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+
+      .hero-headline { font-size: clamp(2.2rem, 8vw, 3.2rem); }
+
+      .cards-grid { grid-template-columns: 1fr; }
+
+      .download-card { padding: 2.5rem 1.5rem; }
+
+      .section { padding: 4rem 0; }
+
+      .bible-mockup {
+        width: 130px;
+        height: 175px;
+      }
+
+      .book-cross-v { height: 42px; }
+      .book-cross-h { width: 28px; }
+
+      .hero-ctas { flex-direction: column; gap: 0.85rem; }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 0 1.25rem; }
+      .hero-subtitle { font-size: 1rem; }
+      .download-card { padding: 2rem 1.25rem; }
+    }
+
+    /* ─── Scripture verse footer watermark ────────────────────────── */
+    .scripture-watermark {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 0.85rem;
+      color: rgba(154,133,112,0.35);
+      text-align: center;
+      padding: 0 2rem 1.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── Stats strip ───────────────────────────────────────────────── */
+    .stats-strip {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      flex-wrap: wrap;
+      padding: 3.5rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted-dark);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Animated Particle Stars ───────────────────────────────────── -->
+  <div class="particles" aria-hidden="true" id="particles"></div>
+
+  <!-- ── Navigation ────────────────────────────────────────────────── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo" aria-label="Bible App home">
+        <div class="nav-logo-icon" aria-hidden="true"></div>
+        <span class="nav-logo-text">Bible <span>App</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#download">Download</a></li>
+        <li>
+          <a href="./Bible-App-1.0.0-Setup.exe" class="btn-nav-download" download>
+            ▼ &nbsp;Download Free
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── Hero ──────────────────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="hero-content">
+
+      <!-- Floating Bible mockup -->
+      <div class="bible-mockup" aria-hidden="true">
+        <div class="book-glow-ring"></div>
+        <div class="book-spine"></div>
+        <div class="book-cover">
+          <div class="book-cross">
+            <div class="book-cross-v"></div>
+            <div class="book-cross-h"></div>
+          </div>
+          <div class="book-title-text">Holy Bible</div>
+        </div>
+        <div class="book-pages"></div>
+        <div class="book-ribbon"></div>
+      </div>
+
+      <div class="hero-eyebrow">
+        <span class="dot"></span>
+        Free Desktop App · Windows 10/11
+      </div>
+
+      <h1 class="hero-headline">
+        Read Scripture.<br />
+        <span class="line2">Anywhere. Always.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        A beautiful, offline Bible reader with AI study companion, verse memorisation, and Gospel music — crafted for deep, daily scripture engagement.
+      </p>
+
+      <div class="hero-ctas">
+        <a href="./Bible-App-1.0.0-Setup.exe" class="btn-primary" download>
+          <span class="icon">▼</span>
+          Download for Windows
+        </a>
+        <a href="#features" class="btn-secondary">
+          View Features &nbsp;→
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── Stats Strip ────────────────────────────────────────────────── -->
+  <div class="container reveal">
+    <div class="stats-strip">
+      <div class="stat-item">
+        <span class="stat-number">4</span>
+        <span class="stat-label">Translations</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">66</span>
+        <span class="stat-label">Books</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">5</span>
+        <span class="stat-label">Drill Modes</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">100%</span>
+        <span class="stat-label">Offline</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">Free</span>
+        <span class="stat-label">Forever</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Features ──────────────────────────────────────────────────── -->
+  <section id="features" class="section">
+    <div class="container">
+
+      <div class="section-header reveal">
+        <div class="section-label">Core Features</div>
+        <h2 class="section-title">Everything you need to<br />study scripture deeply</h2>
+        <p class="section-subtitle">Six thoughtfully crafted modules — each one designed to deepen your relationship with the Word.</p>
+      </div>
+
+      <div class="cards-grid">
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="card-icon">📖</div>
+          <h3 class="card-title">Beautiful Reader</h3>
+          <p class="card-desc">Paper-like page turns, 4 translations (WEB, LSG, Kids), adjustable font size, line spacing, and dark/sepia/light themes.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="card-icon">🧠</div>
+          <h3 class="card-title">AI Study Companion</h3>
+          <p class="card-desc">Ask questions about any passage. Grounded answers from bundled scripture only — never invented. Powered by your chosen AI model.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="card-icon">🎵</div>
+          <h3 class="card-title">Gospel Room</h3>
+          <p class="card-desc">Curated gospel music streams while you read. Soul-filling worship at your fingertips — the perfect companion for quiet time.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="card-icon">⭐</div>
+          <h3 class="card-title">Verse Memorisation</h3>
+          <p class="card-desc">Spaced repetition system with 5 drill modes. Track daily streaks, earn badges, and hide completed verses progressively.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="card-icon">🔍</div>
+          <h3 class="card-title">Verse Search &amp; Graph</h3>
+          <p class="card-desc">Full-text search across all books and chapters. Visualise thematic connections between verses in a stunning 3D constellation view.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-6">
+          <div class="card-icon">📚</div>
+          <h3 class="card-title">Structured Courses</h3>
+          <p class="card-desc">Daily verses, guided lessons, classroom mode, and a personal study lab. Built for lifelong learning of the Word.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── Download Section ───────────────────────────────────────────── -->
+  <section id="download" class="section">
+    <div class="container">
+
+      <div class="download-card reveal">
+
+        <div class="version-badge">
+          <span class="badge-dot"></span>
+          Version 1.0.0 · Windows 64-bit
+        </div>
+
+        <h2 class="download-title">
+          Start reading Scripture<br />
+          <span class="gradient-text">today. For free.</span>
+        </h2>
+
+        <p class="download-tagline">No account required. No internet needed. Just open and read.</p>
+
+        <a href="./Bible-App-1.0.0-Setup.exe" class="btn-download-big" download>
+          <span class="dl-main">
+            <span class="dl-arrow">▼</span>
+            Download Bible App
+          </span>
+          <span class="dl-sub">Free forever · ~126 MB</span>
+        </a>
+
+        <div class="sys-requirements">
+          <div class="sys-req-item">
+            <span class="req-icon">⊞</span>
+            Windows 10 / 11
+          </div>
+          <div class="sys-req-item">
+            <span class="req-icon">⬡</span>
+            64-bit processor
+          </div>
+          <div class="sys-req-item">
+            <span class="req-icon">◉</span>
+            300 MB disk space
+          </div>
+          <div class="sys-req-item">
+            <span class="req-icon">✦</span>
+            No internet required
+          </div>
+        </div>
+
+        <p class="auto-update-note">Updates automatically in the background</p>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+
+        <div class="footer-logo">
+          <span class="cross-tiny">✝</span>
+          Bible App
+        </div>
+
+        <ul class="footer-links">
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#download">Download</a></li>
+        </ul>
+
+        <p class="footer-copy">
+          © 2025 My Digital Solutions &nbsp;·&nbsp; Made with <span class="heart">♥</span> for scripture lovers
+        </p>
+
+      </div>
+    </div>
+  </footer>
+
+  <p class="scripture-watermark">
+    "Your word is a lamp to my feet and a light to my path." — Psalm 119:105
+  </p>
+
+  <!-- ── Vanilla JS ──────────────────────────────────────────────────── -->
+  <script>
+    // ── Particle generation ─────────────────────────────────────────
+    (function () {
+      const container = document.getElementById('particles');
+      const COUNT = 88;
+
+      for (let i = 0; i < COUNT; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+
+        const x   = Math.random() * 100;
+        const y   = Math.random() * 100;
+        const dur = (3.5 + Math.random() * 5).toFixed(2);
+        const del = (Math.random() * 8).toFixed(2);
+        const op  = (0.2 + Math.random() * 0.55).toFixed(2);
+        const sz  = Math.random() < 0.25 ? '3px' : Math.random() < 0.6 ? '2px' : '1px';
+
+        p.style.cssText = `
+          left: ${x}%;
+          top: ${y}%;
+          width: ${sz};
+          height: ${sz};
+          --dur: ${dur}s;
+          --del: ${del}s;
+          --max-op: ${op};
+        `;
+
+        container.appendChild(p);
+      }
+    })();
+
+    // ── Scroll Reveal via IntersectionObserver ──────────────────────
+    (function () {
+      const targets = document.querySelectorAll('.reveal');
+
+      const observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      targets.forEach(function (el) {
+        observer.observe(el);
+      });
+    })();
+
+    // ── Nav background on scroll ────────────────────────────────────
+    (function () {
+      const nav = document.querySelector('nav');
+      window.addEventListener('scroll', function () {
+        if (window.scrollY > 60) {
+          nav.style.background = 'rgba(10,10,15,0.92)';
+        } else {
+          nav.style.background = 'rgba(10,10,15,0.65)';
+        }
+      }, { passive: true });
+    })();
+  </script>
+
+</body>
+</html>
