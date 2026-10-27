@@ -11,7 +11,7 @@ interface Msg { role: 'user' | 'assistant'; content: string; cites?: Hit[] }
 // Shown whenever the model can't be reached (Ollama not running, no OpenRouter
 // key, network hiccup). Deliberately hides every technical detail.
 const AI_UNAVAILABLE =
-  "The study companion isn't connected right now. Open Settings to turn on AI — run Ollama locally or add an OpenRouter key — then ask again."
+  "The study companion isn't connected right now. Start Ollama and pull any model (for example `ollama pull llama3.2`), then ask again."
 
 interface Props {
   open: boolean

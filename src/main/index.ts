@@ -17,8 +17,8 @@ function ensureDir(): void {
 // ── Settings ──────────────────────────────────────────────────────────────
 interface AppSettings {
   ollamaBase: string
-  openRouterKey: string
-  openRouterModel: string
+  /** Preferred Ollama model; empty means pick the best installed one. */
+  ollamaModel: string
   theme: 'dark' | 'light' | 'system'
 }
 
@@ -27,8 +27,7 @@ const SETTINGS_FILE = join(APP_DIR, 'settings.json')
 function defaultSettings(): AppSettings {
   return {
     ollamaBase: 'http://localhost:11434',
-    openRouterKey: '',
-    openRouterModel: 'qwen/qwen3-coder:free',
+    ollamaModel: '',
     theme: 'system',
   }
 }
@@ -36,7 +35,8 @@ function defaultSettings(): AppSettings {
 function readSettings(): AppSettings {
   try {
     if (fs.existsSync(SETTINGS_FILE)) {
-      const raw = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'))
+      // Drop keys from older versions (the OpenRouter fallback was removed).
+      const { openRouterKey, openRouterModel, ...raw } = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'))
       return { ...defaultSettings(), ...raw }
     }
   } catch {}
@@ -313,49 +313,102 @@ function postJson(url: string, body: any, headers: Record<string, string>, timeo
   })
 }
 
-ipcMain.handle('ai:chat', async (_e: any, messages: any[], _model?: string, _opts?: any) => {
-  const settings = readSettings()
+// ── Ollama model discovery ────────────────────────────────────────────────
+// Ollama is the only provider. Every model the user has pulled is free to run,
+// including Ollama's ":cloud" models, so instead of pinning one model name
+// (which breaks the moment it isn't installed) we rank everything installed and
+// fall through the list until one answers.
+interface OllamaModel {
+  name: string
+  size: number
+  capabilities?: string[]
+  details?: { family?: string; families?: string[] }
+}
 
-  // Try Ollama first
-  if (settings.ollamaBase) {
+const isCloudModel = (m: OllamaModel) => /(^|[:-])cloud$/.test(m.name) || m.size === 0
+
+function isChatModel(m: OllamaModel): boolean {
+  if (m.capabilities && !m.capabilities.includes('completion')) return false
+  const fams = [m.details?.family, ...(m.details?.families ?? [])].join(' ')
+  return !/embed|bert/i.test(`${m.name} ${fams}`)
+}
+
+const GB = 1024 ** 3
+
+// Lower is better. Mid-size local models answer well and load quickly; tiny
+// ones ramble, huge ones can take minutes to load into memory, and cloud
+// models need `ollama signin`, so they come after anything local and sensible.
+function modelRank(m: OllamaModel): number {
+  if (isCloudModel(m)) return 3
+  if (m.size < 1.5 * GB) return 5
+  if (m.size > 12 * GB) return 4
+  return 1
+}
+
+async function listOllamaModels(base: string): Promise<OllamaModel[]> {
+  const { status, body } = await httpGet(`${base}/api/tags`, 5000)
+  if (status !== 200) throw new Error(`Ollama HTTP ${status}`)
+  const models: OllamaModel[] = (JSON.parse(body)?.models ?? []).filter(isChatModel)
+
+  // Models already loaded in memory answer instantly — try those first.
+  let loaded = new Set<string>()
+  try {
+    const ps = await httpGet(`${base}/api/ps`, 3000)
+    if (ps.status === 200) loaded = new Set((JSON.parse(ps.body)?.models ?? []).map((m: any) => m.name))
+  } catch {}
+
+  const score = (m: OllamaModel) => (loaded.has(m.name) ? 0 : modelRank(m))
+  return models.sort((a, b) => score(a) - score(b) || a.size - b.size)
+}
+
+// The model that last answered, so the next question skips the fallback walk.
+let lastGoodModel = ''
+
+const AI_DEADLINE_MS = 180000
+
+ipcMain.handle('ai:chat', async (_e: any, messages: any[], model?: string, _opts?: any) => {
+  const settings = readSettings()
+  const base = settings.ollamaBase.replace(/\/+$/, '')
+
+  let installed: OllamaModel[] = []
+  try { installed = await listOllamaModels(base) } catch {}
+
+  if (!installed.length) {
+    return {
+      ok: false,
+      provider: 'none' as const,
+      model: '',
+      content: "The AI companion isn't available. Start Ollama and pull a model (for example `ollama pull llama3.2`), then ask again.",
+    }
+  }
+
+  const preferred = [model, settings.ollamaModel, lastGoodModel].filter(Boolean) as string[]
+  const order = [
+    ...preferred.map(p => installed.find(m => m.name === p)).filter(Boolean) as OllamaModel[],
+    ...installed.filter(m => !preferred.includes(m.name)),
+  ]
+
+  const deadline = Date.now() + AI_DEADLINE_MS
+  for (const m of order) {
+    const remaining = deadline - Date.now()
+    if (remaining <= 0) break
     try {
-      const payload = {
-        model: 'llama3.2:3b',
+      const payload: any = {
+        model: m.name,
         messages,
         stream: false,
         options: { num_predict: 1200 },
       }
-      const { status, body } = await postJson(
-        `${settings.ollamaBase}/api/chat`,
-        payload,
-        {},
-        25000
-      )
+      // Reasoning models otherwise spend the token budget thinking out loud.
+      if (m.capabilities?.includes('thinking')) payload.think = false
+      const { status, body } = await postJson(`${base}/api/chat`, payload, {}, Math.min(remaining, 120000))
       if (status === 200) {
         const data = JSON.parse(body)
         const content = data?.message?.content || data?.response || ''
-        if (content) return { ok: true, provider: 'ollama', model: payload.model, content }
-      }
-    } catch {}
-  }
-
-  // Fall back to OpenRouter
-  if (settings.openRouterKey) {
-    try {
-      const { status, body } = await postJson(
-        'https://openrouter.ai/api/v1/chat/completions',
-        { model: settings.openRouterModel, messages, max_tokens: 1200 },
-        {
-          Authorization: `Bearer ${settings.openRouterKey}`,
-          'HTTP-Referer': 'https://bible.app',
-          'X-Title': 'Bible App',
-        },
-        30000
-      )
-      if (status === 200) {
-        const data = JSON.parse(body)
-        const content = data?.choices?.[0]?.message?.content || ''
-        if (content) return { ok: true, provider: 'openrouter', model: settings.openRouterModel, content }
+        if (content) {
+          lastGoodModel = m.name
+          return { ok: true, provider: 'ollama', model: m.name, content }
+        }
       }
     } catch {}
   }
@@ -364,27 +417,20 @@ ipcMain.handle('ai:chat', async (_e: any, messages: any[], _model?: string, _opt
     ok: false,
     provider: 'none' as const,
     model: '',
-    content: "The AI companion isn't available. Open Settings to configure Ollama (local) or add an OpenRouter API key.",
+    content: "None of your Ollama models answered. Check that Ollama is running, then ask again.",
   }
 })
 
 ipcMain.handle('ai:models', async () => {
   const settings = readSettings()
-  const models: { id: string; name: string; provider: string }[] = []
-
-  if (settings.ollamaBase) {
-    try {
-      const { status, body } = await httpGet(`${settings.ollamaBase}/api/tags`, 5000)
-      if (status === 200) {
-        const data = JSON.parse(body)
-        for (const m of (data?.models ?? [])) {
-          models.push({ id: m.name, name: m.name, provider: 'ollama' })
-        }
-      }
-    } catch {}
+  try {
+    const installed = await listOllamaModels(settings.ollamaBase.replace(/\/+$/, ''))
+    return {
+      models: installed.map(m => ({ id: m.name, name: m.name, provider: 'ollama', cloud: isCloudModel(m) })),
+    }
+  } catch {
+    return { models: [] }
   }
-
-  return { models }
 })
 
 // ── Window creation ───────────────────────────────────────────────────────
@@ -440,22 +486,44 @@ ipcMain.on('window:close',            () => mainWindow?.close())
 ipcMain.handle('window:isMaximized',  () => mainWindow?.isMaximized() ?? false)
 
 // ── Auto updater ─────────────────────────────────────────────────────────
+// Releases are published to GitHub (see "publish" in package.json); the
+// installed app reads latest.yml from the newest release. Events are appended
+// to ~/.bible-app/updater.log so a failed update can be diagnosed afterwards.
+const UPDATER_LOG = join(APP_DIR, 'updater.log')
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000
+
+function logUpdater(msg: string): void {
+  try {
+    ensureDir()
+    fs.appendFileSync(UPDATER_LOG, `${new Date().toISOString()} v${app.getVersion()} ${msg}
+`)
+  } catch {}
+}
+
 function setupAutoUpdater(): void {
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
 
-  autoUpdater.on('update-available', () => {
-    mainWindow?.webContents.send('updater:update-available')
+  autoUpdater.on('checking-for-update', () => logUpdater('checking for update'))
+  autoUpdater.on('update-not-available', (info) => logUpdater(`up to date (latest ${info?.version})`))
+  autoUpdater.on('update-available', (info) => {
+    logUpdater(`update available: ${info?.version}`)
+    mainWindow?.webContents.send('updater:update-available', info?.version)
   })
-  autoUpdater.on('update-downloaded', () => {
-    mainWindow?.webContents.send('updater:update-downloaded')
+  autoUpdater.on('update-downloaded', (info) => {
+    logUpdater(`update downloaded: ${info?.version} (installs on quit)`)
+    mainWindow?.webContents.send('updater:update-downloaded', info?.version)
   })
   autoUpdater.on('error', (err) => {
+    logUpdater(`error: ${err?.message ?? err}`)
     console.error('[bible-app] updater error:', err)
   })
 
   if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {})
+    const check = () => autoUpdater.checkForUpdatesAndNotify().catch((e) => logUpdater(`check failed: ${e?.message ?? e}`))
+    check()
+    // People leave a Bible reader open for days; keep checking while it runs.
+    setInterval(check, UPDATE_CHECK_INTERVAL_MS)
   }
 }
 

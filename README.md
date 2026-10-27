@@ -103,10 +103,11 @@ The app checks GitHub Releases on startup, downloads new versions in the backgro
 
 Use **Ask** in the reader to ask a question. The app searches the bundled Bible for relevant passages and passes only those to the model. The model is told to quote nothing else, to cite every verse as `[Book 1:2]`, and to say so plainly when the passages don't answer the question. Answers come back in the language you're reading in.
 
-| Provider | Setup | Notes |
-|---|---|---|
-| **[Ollama](https://ollama.com)** (default) | Install Ollama and pull a model, e.g. `ollama pull llama3.1` | Runs fully on your PC at `http://localhost:11434` |
-| **[OpenRouter](https://openrouter.ai)** (fallback) | Add an API key in the app settings | Used only if Ollama isn't reachable |
+The companion runs on **[Ollama](https://ollama.com)** — free, no API keys. Install Ollama and pull any chat model, e.g. `ollama pull llama3.2`.
+
+- Every model you've pulled is used: the app ranks them (models already loaded in memory first, then mid-size local models, then Ollama `:cloud` models, then very small or very large ones) and falls through the list until one answers.
+- Free Ollama cloud models (e.g. `ollama pull gpt-oss:20b-cloud`) work too, after `ollama signin`.
+- Pin a specific model by setting `"ollamaModel"` in `~/.bible-app/settings.json`.
 
 Everything else in the app works without AI.
 
