@@ -1106,3 +1106,75 @@ input, textarea { user-select: text; }
     rgba(0,0,0,0) 0%, rgba(0,0,0,0.13) 42%, rgba(0,0,0,0.2) 50%,
     rgba(0,0,0,0.13) 58%, rgba(0,0,0,0) 100%);
 }
+
+/* ── AI answers (markdown) ─────────────────────────────────────────
+   Tailwind's preflight strips every default from headings, lists and
+   quotes, so without these rules a model's markdown renders as one flat
+   block. Colours come from the theme tokens, so light bases flip too. */
+.aihub-md { --md-gold: 214 168 72; line-height: 1.68; word-break: break-word; }
+.aihub-md > :first-child { margin-top: 0; }
+.aihub-md > :last-child { margin-bottom: 0; }
+.aihub-md p { margin: 0 0 0.7em; }
+.aihub-md strong { font-weight: 700; color: var(--ds-accent-ink); }
+.aihub-md em { font-style: italic; opacity: 0.92; }
+.aihub-md h1, .aihub-md h2, .aihub-md h3, .aihub-md h4 {
+  margin: 1.05em 0 0.45em; font-weight: 700; line-height: 1.3;
+  color: var(--ds-accent-ink); letter-spacing: -0.005em;
+}
+.aihub-md h1 { font-size: 1.22em; }
+.aihub-md h2 { font-size: 1.12em; }
+.aihub-md h3, .aihub-md h4 {
+  font-size: 0.98em; display: flex; align-items: center; gap: 0.45em;
+}
+.aihub-md h3::before, .aihub-md h4::before {
+  content: ''; width: 3px; height: 1em; border-radius: 2px; flex-shrink: 0;
+  background: linear-gradient(180deg, rgb(var(--ds-accent-soft)), rgb(var(--md-gold)));
+}
+.aihub-md ul, .aihub-md ol { margin: 0.35em 0 0.8em; padding-left: 1.35em; }
+.aihub-md ul { list-style: none; padding-left: 1.1em; }
+.aihub-md ul > li { position: relative; }
+.aihub-md ul > li::before {
+  content: ''; position: absolute; left: -0.95em; top: 0.68em;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgb(var(--ds-accent-soft)); box-shadow: 0 0 0 3px rgb(var(--ds-accent) / 0.15);
+}
+.aihub-md ol { list-style: decimal; }
+.aihub-md ol > li::marker { color: var(--ds-accent-ink); font-weight: 700; }
+.aihub-md li { margin: 0.28em 0; }
+.aihub-md li > p { margin: 0; }
+/* Quoted scripture reads as its own card: serif, gold rule, soft wash. */
+.aihub-md blockquote {
+  margin: 0.75em 0; padding: 0.6em 0.85em 0.6em 0.95em;
+  border-left: 3px solid rgb(var(--md-gold));
+  border-radius: 0 10px 10px 0;
+  background: linear-gradient(90deg, rgb(var(--md-gold) / 0.12), rgb(var(--md-gold) / 0.03));
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-style: italic; font-size: 1.02em;
+}
+.aihub-md blockquote p { margin: 0.2em 0; }
+.aihub-md blockquote .verse-chip { font-family: inherit; font-style: normal; }
+.aihub-md hr {
+  margin: 1em 0; border: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ds-border-accent), transparent);
+}
+.aihub-md table { width: 100%; border-collapse: collapse; margin: 0.6em 0; font-size: 0.94em; }
+.aihub-md th, .aihub-md td { padding: 5px 8px; border-bottom: 1px solid var(--ds-border-sm); text-align: left; }
+.aihub-md th { color: var(--ds-accent-ink); font-weight: 700; background: rgb(var(--ds-accent) / 0.08); }
+
+/* A scripture reference in an answer — click to open that page. */
+.verse-chip {
+  display: inline-flex; align-items: center; gap: 4px; vertical-align: baseline;
+  margin: 0 2px; padding: 1px 8px 1px 6px; border-radius: 999px;
+  font-size: 0.88em; font-weight: 600; font-style: normal; line-height: 1.55;
+  white-space: nowrap; cursor: pointer;
+  color: var(--ds-accent-ink);
+  background: rgb(var(--ds-accent) / 0.14);
+  border: 1px solid rgb(var(--ds-accent) / 0.28);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.verse-chip:hover {
+  background: rgb(var(--ds-accent) / 0.26); border-color: rgb(var(--ds-accent) / 0.55);
+  box-shadow: 0 2px 10px rgb(var(--ds-accent) / 0.25); transform: translateY(-1px);
+}
+.verse-chip:active { transform: translateY(0); }
+.verse-chip svg { opacity: 0.8; flex-shrink: 0; }

@@ -5,6 +5,7 @@ import { parseRef, formatRef, refKey, getTranslationMeta } from '../../services/
 import { parseTypedRef } from './VerseSearch'
 import { cleanNarration } from '../../services/agentTools'
 import Markdown from '../ai/Markdown'
+import { linkifyVerses, VERSE_HREF_PREFIX } from '../../services/verseLinks'
 
 interface Msg { role: 'user' | 'assistant'; content: string; cites?: Hit[] }
 
@@ -75,6 +76,13 @@ const buildSystem = (): string => {
   '• A short, concrete "so what" — how this lands in an ordinary day, in plain words.',
   'Keep it tight. Two or three short paragraphs is usually plenty; don\'t pad.',
   'When someone is hurting or afraid, be gentle first and doctrinal second.',
+  '',
+  'FORMAT in Markdown so the answer is easy to scan — never one flat block of text:',
+  '• Open with the plain answer, its key phrase in **bold**.',
+  '• Quote each verse on its own blockquote line: > "the words of the verse" [Book C:V]',
+  '• Use a short "### " heading only when the answer has distinct parts.',
+  '• Use "- " bullets for lists of verses or practical steps.',
+  '• Write every reference as [Book C:V], or [Book C:V-V] for a range.',
   ].join('\n')
 }
 
@@ -205,29 +213,26 @@ export default function BibleAssistant({
   }, [busy, selectedRef, bookId, bookName, chapter, onOpenRef])
 
   // The answer renders as markdown (the model writes lists, bold and the odd
-  // table), and each [John 3:16] citation that matches a retrieved verse
-  // becomes a link to "#cite-<index>", which renderLink turns into a button
-  // that opens the passage. Unmatched brackets stay as written.
+  // table, quoted scripture), and every scripture reference in it — bracketed,
+  // bare or a range, English or French — becomes a link to "#verse-<ref>",
+  // which renderLink turns into a chip that opens that page of the Bible.
   const render = (text: string, cites?: Hit[]) => {
-    const linked = text.replace(/\[([^\]\n]{2,40}?)\](?!\()/g, (whole, label: string) => {
-      const i = cites?.findIndex(h => `${h.book} ${h.chapter}:${h.verse}`.toLowerCase() === label.toLowerCase()) ?? -1
-      return i >= 0 ? `[${label}](#cite-${i})` : whole
-    })
     const renderLink = (href: string, children: React.ReactNode) => {
-      const hit = href.startsWith('#cite-') ? cites?.[Number(href.slice(6))] : undefined
-      if (!hit) return null
+      if (!href.startsWith(VERSE_HREF_PREFIX)) return null
+      const ref = href.slice(VERSE_HREF_PREFIX.length)
+      const hit = cites?.find(h => h.ref === ref)
       return (
         <button
-          onClick={() => onOpenRef(hit.ref)}
-          title={hit.text}
-          className="mx-0.5 rounded px-1.5 py-0.5 text-[0.92em] font-medium"
-          style={{ background: 'rgb(var(--ds-accent) / 0.16)', color: 'rgb(var(--ds-accent-soft))' }}
+          onClick={() => onOpenRef(ref)}
+          title={hit ? `${hit.text}\n\nClick to open in the Bible` : 'Open in the Bible'}
+          className="verse-chip"
         >
+          <BookOpen size={11} strokeWidth={2.4} />
           {children}
         </button>
       )
     }
-    return <Markdown content={linked} onNavigate={() => {}} renderLink={renderLink} />
+    return <Markdown content={linkifyVerses(text)} onNavigate={() => {}} renderLink={renderLink} />
   }
 
   if (!open) return null
@@ -288,7 +293,10 @@ export default function BibleAssistant({
               className={`selectable-text inline-block max-w-full rounded-2xl px-3.5 py-2.5 text-left text-[13px] leading-relaxed ${m.role === 'user' ? 'whitespace-pre-wrap font-medium' : ''}`}
               style={m.role === 'user'
                 ? { background: 'rgb(var(--ds-accent) / 0.16)' }
-                : { background: 'var(--ds-surface, rgba(127,127,127,0.10))' }}
+                : {
+                    background: 'linear-gradient(160deg, rgb(var(--ds-accent) / 0.07), rgb(127 127 127 / 0.06))',
+                    border: '1px solid var(--ds-border-accent-sm)',
+                  }}
             >
               {m.role === 'assistant' ? render(m.content, m.cites) : m.content}
             </div>
