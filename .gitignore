@@ -12,3 +12,4 @@ landing/latest.yml
 
 # stray duplicate copies
 * (2).*
+.playwright-mcp/
