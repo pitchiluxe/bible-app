@@ -951,6 +951,48 @@
     .footer-links a:hover { color: var(--gold); }
 
     /* ─── Responsive ────────────────────────────────────────────────── */
+    /* ─── New in 1.1 ──────────────────────────────────────────────── */
+    .cards-grid.cards-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .new-tag {
+      position: absolute;
+      top: 1.4rem;
+      right: 1.4rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #1a1408;
+      background: linear-gradient(135deg, #e6c86e, #c9a84c);
+    }
+
+    .card-points {
+      margin-top: 1rem;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .card-points li {
+      position: relative;
+      padding-left: 1.2rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .card-points li::before {
+      content: '✦';
+      position: absolute;
+      left: 0;
+      color: #c9a84c;
+      font-size: 0.7rem;
+      top: 0.25rem;
+    }
+
     @media (max-width: 900px) {
       .cards-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -960,7 +1002,7 @@
 
       .hero-headline { font-size: clamp(2.2rem, 8vw, 3.2rem); }
 
-      .cards-grid { grid-template-columns: 1fr; }
+      .cards-grid, .cards-grid.cards-grid-2 { grid-template-columns: 1fr; }
 
       .download-card { padding: 2.5rem 1.5rem; }
 
@@ -1046,6 +1088,7 @@
       </a>
 
       <ul class="nav-links">
+        <li><a href="#new">New</a></li>
         <li><a href="#features">Features</a></li>
         <li><a href="#download">Download</a></li>
         <li>
@@ -1087,7 +1130,7 @@
       </h1>
 
       <p class="hero-subtitle">
-        A beautiful, offline Bible reader with AI study companion, verse memorisation, and Gospel music — crafted for deep, daily scripture engagement.
+        A beautiful, offline Bible reader with a monthly reading plan, a natural reading voice, an AI study companion, verse memorisation, and Gospel music — crafted for deep, daily scripture engagement.
       </p>
 
       <div class="hero-ctas">
@@ -1130,6 +1173,48 @@
       </div>
     </div>
   </div>
+
+  <!-- ── New in 1.1 ────────────────────────────────────────────────── -->
+  <section id="new" class="section">
+    <div class="container">
+
+      <div class="section-header reveal">
+        <div class="section-label">New in 1.1</div>
+        <h2 class="section-title">A reading for every month.<br />A voice that reads like a person.</h2>
+        <p class="section-subtitle">Two new ways to stay in the Word every day of the year.</p>
+      </div>
+
+      <div class="cards-grid cards-grid-2">
+
+        <div class="feature-card reveal reveal-delay-1">
+          <span class="new-tag">New</span>
+          <div class="card-icon">🗓️</div>
+          <h3 class="card-title">Monthly Reading Plan</h3>
+          <p class="card-desc">Every month opens with a theme, a verse to carry through it, and a reading for every single day — right in the Study room.</p>
+          <ul class="card-points">
+            <li>Genesis for January's new start, Proverbs by date in May, psalms of thanksgiving in November</li>
+            <li>Isaiah's promises through Advent — and Luke 2 on Christmas Day</li>
+            <li>A word of encouragement for each week, a calendar of the month, and a gentle count of days to catch up</li>
+          </ul>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <span class="new-tag">New</span>
+          <div class="card-icon">🎙️</div>
+          <h3 class="card-title">Natural Reading Voice</h3>
+          <p class="card-desc">Listen to scripture read by a warm, human-sounding voice instead of a robotic one — on your own computer, fully offline.</p>
+          <ul class="card-points">
+            <li>Five voices to choose from — American and British, warm or deeper</li>
+            <li>Reads like a person: pauses at commas and full stops, rests after the reference, slows to land the last line</li>
+            <li>One-time 165 MB download from the Voice button; nothing you read ever leaves your device</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
 
   <!-- ── Features ──────────────────────────────────────────────────── -->
   <section id="features" class="section">
@@ -1193,7 +1278,7 @@
 
         <div class="version-badge">
           <span class="badge-dot"></span>
-          Version 1.0.1 · Windows 64-bit
+          Version 1.1.0 · Windows 64-bit
         </div>
 
         <h2 class="download-title">
@@ -1208,7 +1293,7 @@
             <span class="dl-arrow">▼</span>
             Download Bible App
           </span>
-          <span class="dl-sub">Free forever · ~126 MB</span>
+          <span class="dl-sub">Free forever · ~135 MB</span>
         </a>
 
         <div class="sys-requirements">
@@ -1222,7 +1307,7 @@
           </div>
           <div class="sys-req-item">
             <span class="req-icon">◉</span>
-            300 MB disk space
+            500 MB disk space
           </div>
           <div class="sys-req-item">
             <span class="req-icon">✦</span>
