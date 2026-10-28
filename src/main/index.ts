@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import * as fs from 'fs'
 import * as https from 'https'
@@ -543,6 +543,23 @@ ipcMain.handle('updater:install', () => {
 // ── App lifecycle ─────────────────────────────────────────────────────────
 app.whenReady().then(() => {
   ensureDir()
+
+  // YouTube's embedded player refuses a request that arrives without a
+  // Referer, reporting "Error 153 — video player configuration error". The
+  // packaged app is served from file://, which sends none, so the Gospel room
+  // played nothing on every real install. The header names the app's own
+  // site — exactly what a Referer is for. A request that already carries one
+  // is left untouched.
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['https://www.youtube-nocookie.com/*', 'https://www.youtube.com/*'] },
+    (details, callback) => {
+      const headers = { ...details.requestHeaders }
+      const hasReferer = Object.keys(headers).some(k => k.toLowerCase() === 'referer')
+      if (!hasReferer) headers['Referer'] = 'https://pitchiluxe-bible.vercel.app/'
+      callback({ requestHeaders: headers })
+    },
+  )
+
   createWindow()
   setupAutoUpdater()
 

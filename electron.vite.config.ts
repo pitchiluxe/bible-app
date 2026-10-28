@@ -3,7 +3,7 @@ import { copyFileSync, mkdirSync } from 'fs'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { NATURAL_VOICES } from './src/main/tts/voiceModel'
+import { ESPEAK_WASM, NATURAL_VOICES } from './src/main/tts/voiceModel'
 
 // kokoro-js reads its voice files from `../voices/` next to its own code. Once
 // bundled into out/main/ttsWorker.js that is out/voices/, so the voices the
@@ -17,6 +17,9 @@ function copyNaturalVoices(): Plugin {
       const dest = resolve('out/voices')
       mkdirSync(dest, { recursive: true })
       for (const v of NATURAL_VOICES) copyFileSync(resolve(src, `${v.id}.bin`), resolve(dest, `${v.id}.bin`))
+      // French phonemes come from a full espeak-ng build; its wasm is loaded
+      // by path at runtime rather than bundled.
+      copyFileSync(resolve('node_modules/espeak-ng/dist', ESPEAK_WASM), resolve(dest, ESPEAK_WASM))
     },
   }
 }
