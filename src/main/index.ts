@@ -6,6 +6,7 @@ import * as http from 'http'
 import * as os from 'os'
 import { join } from 'path'
 import * as path from 'path'
+import { registerNaturalVoiceIpc } from './tts/naturalVoice'
 
 // ── App data directory ────────────────────────────────────────────────────
 const APP_DIR = join(os.homedir(), '.bible-app')
@@ -206,6 +207,14 @@ ipcMain.handle('settings:set', (_e: any, patch: Partial<AppSettings>) => {
 
 // ── App version ───────────────────────────────────────────────────────────
 ipcMain.handle('app:version', () => app.getVersion())
+
+// The natural reading voice — installed on request, run out of process.
+registerNaturalVoiceIpc({
+  appDir: APP_DIR,
+  send: (channel, ...args) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args)
+  },
+})
 
 // ── HTTP helper ───────────────────────────────────────────────────────────
 function httpGet(url: string, timeoutMs = 10000): Promise<{ status: number; body: string }> {

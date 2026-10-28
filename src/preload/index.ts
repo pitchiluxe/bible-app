@@ -9,6 +9,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setStudy: (study: any, opts?: { allowEmpty?: boolean }) =>
       ipcRenderer.invoke('bible:setStudy', study, opts),
   },
+  // The natural (neural) reading voice. Installed on request; speak() returns
+  // { samples: Float32Array, sampleRate } or { error }.
+  voice: {
+    status:  () => ipcRenderer.invoke('voice:status'),
+    install: () => ipcRenderer.invoke('voice:install'),
+    remove:  () => ipcRenderer.invoke('voice:remove'),
+    speak:   (text: string, voice: string, speed: number) => ipcRenderer.invoke('voice:speak', text, voice, speed),
+    onProgress: (cb: (s: any) => void) => {
+      const h = (_: any, s: any) => cb(s)
+      ipcRenderer.on('voice:progress', h)
+      return () => ipcRenderer.removeListener('voice:progress', h)
+    },
+  },
   ai: {
     chat: (msgs: any[], model?: string, opts?: any) =>
       ipcRenderer.invoke('ai:chat', msgs, model, opts),

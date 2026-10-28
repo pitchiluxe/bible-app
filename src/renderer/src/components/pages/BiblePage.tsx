@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Bookmark, GraduationCap, Music, Sparkles, Search, Share2 } from 'lucide-react'
+import { Bookmark, GraduationCap, Mic, Music, Sparkles, Search, Share2, X } from 'lucide-react'
 import { getBookMeta, getBooks, getChapter, parseRef, refKey, formatRef, bookListOptions, setTranslation, COVER_OPTION, TRANSLATIONS, type TranslationId, type Verse } from '../../services/bibleService'
 import VerseText from '../bible/VerseText'
 import BookSpread from '../bible/BookSpread'
@@ -14,6 +14,7 @@ import VerseSearch from '../bible/VerseSearch'
 import VerseGraph from '../bible/VerseGraph'
 import ListenButton from '../bible/ListenButton'
 import GospelRoom from '../bible/GospelRoom'
+import ReadingVoiceSettings from '../bible/ReadingVoiceSettings'
 import { useBibleSettings } from '../../services/bibleSettings'
 import { onBibleVerseRequest, takeBibleVerseRequest } from '../../services/bibleNavigation'
 import { useBibleAppNav } from '../../App'
@@ -66,6 +67,7 @@ export default function BiblePage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [graphOpen, setGraphOpen] = useState(false)
   const [gospelOpen, setGospelOpen] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
   const [bibleSettings] = useBibleSettings()
 
   // Highlights, saved verses, notes and reading position. `marks` drives
@@ -709,6 +711,13 @@ export default function BiblePage() {
           <Music size={14} /> Gospel
         </button>
         <button
+          onClick={() => setVoiceOpen(true)}
+          title="Reading voice — install the natural voice, choose a voice and the pace"
+          className="flex items-center gap-1.5 rounded-lg border border-aihub-border/40 bg-aihub-surface px-3 py-1.5 text-sm"
+        >
+          <Mic size={14} /> Voice
+        </button>
+        <button
           onClick={() => setGraphOpen(true)}
           title="Verse constellation — your saved verses as a graph"
           className="flex items-center gap-1.5 rounded-lg border border-aihub-border/40 bg-aihub-surface px-3 py-1.5 text-sm"
@@ -783,6 +792,23 @@ export default function BiblePage() {
       {/* The room is a full-screen overlay, so every way out of it goes through
           here: it closes first, then whatever the reader asked for opens on the
           spread they left. */}
+      {/* The reading voice. This app has no settings page, so the voice
+          controls live one click from the Listen buttons they affect. */}
+      {voiceOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6" onClick={() => setVoiceOpen(false)}>
+          <div className="w-full max-w-xl rounded-2xl border border-aihub-border/40 bg-aihub-surface px-6 py-5 shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-bold text-aihub-text"><Mic size={15} /> Reading voice</div>
+              <button onClick={() => setVoiceOpen(false)} className="rounded-lg p-1 opacity-60 hover:opacity-100" title="Close"><X size={15} /></button>
+            </div>
+            <ReadingVoiceSettings
+              rowClass="flex items-center justify-between py-3 border-b border-aihub-border/15 last:border-0"
+              labelClass="text-sm font-semibold text-aihub-text mb-0.5" />
+          </div>
+        </div>
+      )}
+
       <GospelRoom
         open={gospelOpen}
         onClose={() => setGospelOpen(false)}
