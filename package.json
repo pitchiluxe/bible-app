@@ -83,6 +83,9 @@
       "artifactName": "Bible-App-Setup.${ext}",
       "requestedExecutionLevel": "asInvoker",
       "files": [
+        "out/**/*",
+        "resources/icon.ico",
+        "resources/icon.png",
         "!node_modules/onnxruntime-node/bin/napi-v3/{darwin,linux}/**",
         "!node_modules/onnxruntime-node/bin/napi-v3/win32/arm64/**"
       ]
