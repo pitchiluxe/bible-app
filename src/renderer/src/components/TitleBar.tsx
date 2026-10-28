@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
+import { useBibleLang } from '../services/bibleLang'
 
 export default function TitleBar() {
+  const { t } = useBibleLang()
   const [maximized, setMaximized] = useState(false)
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function TitleBar() {
       {/* Window control buttons — no-drag so clicks register */}
       <div className="no-drag" style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
         <WinBtn
-          title="Minimize"
+          title={t('Minimize', 'Réduire')}
           onClick={() => window.electronAPI.window.minimize()}
           hoverColor="rgba(255,255,255,0.12)"
         >
@@ -40,7 +42,7 @@ export default function TitleBar() {
         </WinBtn>
 
         <WinBtn
-          title={maximized ? 'Restore' : 'Maximize'}
+          title={maximized ? t('Restore', 'Restaurer') : t('Maximize', 'Agrandir')}
           onClick={() => window.electronAPI.window.maximize()}
           hoverColor="rgba(255,255,255,0.12)"
         >
@@ -59,7 +61,7 @@ export default function TitleBar() {
         </WinBtn>
 
         <WinBtn
-          title="Close"
+          title={t('Close', 'Fermer')}
           onClick={() => window.electronAPI.window.close()}
           hoverColor="rgba(196,43,28,0.85)"
           style={{ width: 46 }}
