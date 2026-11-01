@@ -1,0 +1,56 @@
+name: Windows release
+
+on:
+  push:
+    tags: ['v*']
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify classroom explanations
+        run: |
+          node tests/classroom-explain.cjs
+          node tests/classroom-explain.cjs . --unavailable
+      - run: npm run build
+      - name: Package Windows installer
+        run: npx electron-builder --win nsis --publish never
+      - name: Verify and publish update
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = "v$version"
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne $tag) {
+            throw 'Release tag does not match package version'
+          }
+          node -e "const fs=require('fs'),c=require('crypto'),a=require('assert/strict'),y=require('js-yaml'); const m=y.load(fs.readFileSync('dist/latest.yml','utf8')); a.equal(m.version,require('./package.json').version); const f=m.files.find(f=>f.url.endsWith('.exe')),b=fs.readFileSync('dist/'+f.url); a.equal(b.length,f.size); a.equal(c.createHash('sha512').update(b).digest('base64'),f.sha512)"
+          if ($LASTEXITCODE -ne 0) { throw 'Update checksum verification failed' }
+          gh release view $tag --json isDraft > release-state.json
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --verify-tag --draft --title "Bible App $version" --notes 'Fixes classroom Explain for all Bible versions. Opens the study companion with the selected passage and active translation; shows a clear message when AI is unavailable.'
+            if ($LASTEXITCODE -ne 0) { throw 'Could not create draft release' }
+          } elseif (-not (Get-Content release-state.json -Raw | ConvertFrom-Json).isDraft) {
+            throw 'Release is already published; refusing to replace published assets'
+          }
+          gh release upload $tag dist/Bible-App-Setup.exe dist/Bible-App-Setup.exe.blockmap dist/latest.yml --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Could not upload update assets' }
+          gh release edit $tag --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish release' }
