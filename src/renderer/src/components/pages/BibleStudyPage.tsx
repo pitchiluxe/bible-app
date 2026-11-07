@@ -207,7 +207,7 @@ export default function BibleStudyPage() {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden page-enter" style={{ background: 'var(--ds-page-bg)' }}>
-      <div className="flex shrink-0 items-center justify-between px-6 py-4"
+      <div className="bible-study-toolbar flex shrink-0 items-center justify-between px-6 py-4"
         style={{ borderBottom: '1px solid rgba(230,200,110,0.12)' }}>
         <div className="flex items-center gap-3">
           {/* The study room is a page of its own here, not a browser tab — so it

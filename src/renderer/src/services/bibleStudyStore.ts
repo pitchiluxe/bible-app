@@ -64,8 +64,27 @@ export function useBibleStudy(): StudyStore {
       })
       .catch(() => setError(true))
       .finally(() => setLoaded(true))
-    return () => { if (timer.current) clearTimeout(timer.current) }
+    return () => {
+      if (timer.current) {
+        clearTimeout(timer.current)
+        timer.current = null
+        api?.setStudy?.(ref.current).catch(() => {})
+      }
+    }
   }, [])
+
+  useEffect(() => {
+    const flush = () => {
+      if (!safeToWrite || !timer.current) return
+      clearTimeout(timer.current)
+      timer.current = null
+      ;(window as any).electronAPI?.bible?.setStudy?.(ref.current).catch(() => {})
+    }
+    window.addEventListener('pagehide', flush)
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flush() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onVisibility) }
+  }, [safeToWrite])
 
   const update = useCallback((fn: (current: StudyState) => StudyState) => {
     const next = fn(ref.current)

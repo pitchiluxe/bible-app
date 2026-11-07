@@ -113,6 +113,10 @@ Everything else in the app works without AI.
 
 ## Build from source
 
+### Web edition
+
+Run `npm run web:dev` to use the full reader and study app in a browser, or `npm run web:build` to generate a static website in `dist-web/`. The web edition includes browser saving, JSON backups, read-aloud, and offline Scripture after its initial download. See [web setup and deployment](web/README.md) for hosting and optional local AI setup.
+
 **Prerequisites:** Node.js 20+ and npm.
 
 ```bash

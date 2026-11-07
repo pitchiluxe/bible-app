@@ -78,7 +78,19 @@ export default function ReadingVoiceSettings({ rowClass, labelClass }: { rowClas
     })
   }, [previewing, setBible])
 
-  if (!api()) return null
+  if (!api()) return (
+    <div className={rowClass} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+      <div className={labelClass}>{t('Browser reading voice', 'Voix de lecture du navigateur')}</div>
+      <p className="text-xs text-aihub-muted">{t('Uses the English or French voices available on your device. Voice quality and offline availability depend on your browser.', 'Utilise les voix anglaises ou françaises disponibles sur votre appareil. La qualité et la disponibilité hors ligne dépendent du navigateur.')}</p>
+      <label className="text-xs">{t('Reading pace', 'Vitesse de lecture')} · {bible.readingPace.toFixed(2)}×
+        <input aria-label={t('Reading pace', 'Vitesse de lecture')} type="range" min="0.8" max="1.15" step="0.05" value={bible.readingPace}
+          onChange={e => setBible({ readingPace: Number(e.target.value) })} className="ml-3" />
+      </label>
+      <button onClick={() => play(null, lang)} className="rounded-lg border border-aihub-border/40 px-3 py-2 text-xs">
+        {previewing ? t('Stop preview', 'Arrêter l’aperçu') : t('Preview voice', 'Écouter la voix')}
+      </button>
+    </div>
+  )
   const pct = Math.round((status?.progress || 0) * 100)
 
   return (

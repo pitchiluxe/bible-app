@@ -8,6 +8,11 @@ interface Window {
       getStudy: () => Promise<any>
       setStudy: (study: any, opts?: { allowEmpty?: boolean }) => Promise<void>
     }
+    backup?: {
+      export: (local?: Record<string, string>) => Promise<any>
+      preview: () => Promise<any>
+      apply: () => Promise<any>
+    }
     ai: {
       chat: (msgs: any[], model?: string, opts?: any) => Promise<any>
       models: (opts?: any) => Promise<any>

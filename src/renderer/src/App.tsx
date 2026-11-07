@@ -37,7 +37,7 @@ export default function App() {
       <div className="h-screen w-screen overflow-hidden bg-aihub-bg text-aihub-text">
         <TitleBar />
         {/* 32px top padding keeps content below the titlebar drag region */}
-        <div style={{ paddingTop: 32, height: '100%', boxSizing: 'border-box' }}>
+        <div style={{ paddingTop: window.electronAPI?.window ? 32 : 0, height: '100%', boxSizing: 'border-box' }}>
           <Suspense fallback={
             <div className="flex h-full items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-aihub-accent border-t-transparent" />

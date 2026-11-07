@@ -25,6 +25,7 @@ export default function SavedVerses({ saved, notes, onOpen, onRemove, onClose }:
   const LOCAL_KEYS = ['aihub-custom-themes', 'aihub-custom-window-styles', 'aihub-custom-exts']
 
   const exportAll = async () => {
+    if (!window.electronAPI.backup) return
     setBusy(true); setTransferMsg('')
     const local: Record<string, string> = {}
     for (const key of LOCAL_KEYS) {
@@ -40,6 +41,7 @@ export default function SavedVerses({ saved, notes, onOpen, onRemove, onClose }:
   }
 
   const importAll = async () => {
+    if (!window.electronAPI.backup) return
     setBusy(true); setTransferMsg('')
     const preview = await window.electronAPI.backup.preview()
     if (preview?.cancelled) { setBusy(false); return }
@@ -76,7 +78,7 @@ export default function SavedVerses({ saved, notes, onOpen, onRemove, onClose }:
                 they would hate to lose. */}
             <button
               onClick={exportAll}
-              disabled={busy}
+              disabled={busy || !window.electronAPI.backup}
               title={t('Save everything (verses, highlights, notes, bookmarks) to a file you can carry to another computer', 'Tout enregistrer (versets, surlignages, notes, favoris) dans un fichier à emporter sur un autre ordinateur')}
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-aihub-muted hover:bg-aihub-border/30 hover:text-aihub-text disabled:opacity-50"
             >
@@ -84,7 +86,7 @@ export default function SavedVerses({ saved, notes, onOpen, onRemove, onClose }:
             </button>
             <button
               onClick={importAll}
-              disabled={busy}
+              disabled={busy || !window.electronAPI.backup}
               title={t('Bring verses and bookmarks in from another computer’s backup file', 'Importer les versets et favoris depuis la sauvegarde d’un autre ordinateur')}
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-aihub-muted hover:bg-aihub-border/30 hover:text-aihub-text disabled:opacity-50"
             >

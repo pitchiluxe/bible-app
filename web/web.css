@@ -1,0 +1,41 @@
+.web-shell { height: 100dvh; display: flex; flex-direction: column; background: #0a0a0f; color: #f5e6c8; }
+.web-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 18px; background: #230d10; border-bottom: 1px solid #c9a84c40; font: 13px system-ui, sans-serif; }
+.web-bar strong { font: bold 21px Georgia, serif; color: #e7cd89; }
+.web-bar-actions { display: flex; align-items: center; gap: 14px; }
+.web-bar-actions > span { color: #bca98c; font-size: 11px; }
+.web-bar button, .web-modal button { border: 1px solid #c9a84c60; border-radius: 8px; background: #c9a84c16; color: #f5e6c8; padding: 7px 12px; cursor: pointer; }
+.web-content { flex: 1; min-height: 0; overflow: hidden; }
+.web-content > div { width: 100% !important; height: 100% !important; }
+.web-error { padding: 10px 18px; background: #6c281e; font: 13px system-ui; }
+.web-error button { float: right; }
+.web-modal-backdrop { position: fixed; inset: 0; z-index: 20000; display: grid; place-items: center; padding: 16px; background: #000b; }
+.web-modal { width: min(540px, 100%); max-height: 90dvh; overflow: auto; border: 1px solid #c9a84c50; border-radius: 18px; background: #1b1518; color: #f5e6c8; padding: 24px; font: 14px/1.65 system-ui; }
+.web-modal-title { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.web-modal h2 { font: bold 24px Georgia, serif; }
+.web-modal h3 { font-weight: 700; margin-top: 20px; }
+.web-modal p { margin: 10px 0; color: #bcae9a; }
+.web-modal label { display: block; margin: 14px 0; }
+.web-modal input:not([type=checkbox]) { display: block; width: 100%; margin-top: 6px; padding: 9px; border: 1px solid #c9a84c50; border-radius: 8px; background: #100c0e; color: white; }
+.web-modal .web-checkbox { display: flex; gap: 8px; align-items: center; }
+.web-modal .web-primary { background: #743026; }
+.web-modal .web-footnote { font-size: 12px; }
+.web-shell :focus-visible { outline: 2px solid #e7cd89; outline-offset: 3px; }
+.web-content .bible-reader-toolbar { flex-wrap: wrap; }
+.web-content .bible-study-toolbar { flex-wrap: wrap; gap: 12px; }
+.web-content .bible-study-toolbar > div:last-child { max-width: 100%; overflow-x: auto; }
+.web-content .bible-study-toolbar button { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .web-subtitle { display: none; }
+  .web-bar { padding: 8px 12px; }
+  .web-bar-actions { gap: 8px; }
+  .web-content .bible-paper { padding: 14px 10px !important; }
+  .web-content .bible-reader-content { padding: 10px; }
+  .web-content .bible-reader-toolbar { max-height: 150px; overflow-y: auto; gap: 6px; }
+  .web-content .bible-reader-toolbar h1 { width: 100%; font-size: 20px; }
+  .web-content .bible-reader-toolbar select { max-width: 48%; }
+  .web-content .bible-spread { flex-direction: column; overflow-y: auto; }
+  .web-content .bible-spread > .bible-paper { width: 100%; height: 100%; flex-shrink: 0; }
+  .web-content .bible-spread > .bible-paper + .bible-paper { border-top: 1px solid #806a4150; }
+  .web-content .bible-spread > .bible-gutter, .web-content .bible-spread > .pointer-events-none { display: none; }
+  .web-content .fixed > .w-\[420px\] { width: calc(100vw - 24px); }
+}

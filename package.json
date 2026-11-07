@@ -9,7 +9,12 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "npm run build && electron-builder"
+    "package": "npm run build && electron-builder",
+    "web:dev": "vite --config vite.web.config.ts",
+    "web:build": "vite build --config vite.web.config.ts",
+    "web:preview": "vite preview --config vite.web.config.ts",
+    "web:test": "node tests/web-platform.cjs",
+    "web:check": "tsc --project tsconfig.browser.json"
   },
   "dependencies": {
     "d3-force": "^3.0.0",

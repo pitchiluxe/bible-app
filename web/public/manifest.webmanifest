@@ -1,0 +1,10 @@
+{
+  "name": "Bible — Read, Study, Remember",
+  "short_name": "Bible",
+  "description": "Your Bible reader and study room, available offline after the first download.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#5c0f0f"
+}

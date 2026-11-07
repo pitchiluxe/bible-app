@@ -22,7 +22,7 @@ interface Props {
 export default function BookSpread({ left, right, leaf, leafSide = 'right', paper = 'aged' }: Props) {
   const paperClass = paper === 'aged' ? 'bible-paper' : `bible-paper bible-paper-${paper}`
   return (
-    <div className="relative mx-auto flex h-full w-full max-w-6xl overflow-hidden rounded-2xl shadow-2xl">
+    <div className="bible-spread relative mx-auto flex h-full w-full max-w-6xl overflow-hidden rounded-2xl shadow-2xl">
       <div className={`relative w-1/2 ${paperClass} p-10`}>{left}</div>
       <div className="pointer-events-none absolute inset-y-0 left-1/2 w-10 -translate-x-1/2 bible-gutter z-20" />
       <div className={`relative w-1/2 ${paperClass} p-10`}>{right}</div>

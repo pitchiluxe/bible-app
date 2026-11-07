@@ -601,8 +601,8 @@ export default function BiblePage() {
 
   return (
     <div ref={rootRef} className="flex h-full bg-aihub-bg text-aihub-text">
-      <div className="flex min-w-0 flex-1 flex-col p-8">
-      <div className="mb-4 flex shrink-0 items-center gap-2">
+      <div className="bible-reader-content flex min-w-0 flex-1 flex-col p-8">
+      <div className="bible-reader-toolbar mb-4 flex shrink-0 items-center gap-2">
         <h1 className="mr-2 text-2xl font-bold">{book?.name} {chapter}</h1>
         <select
           // Which translation the reader is in. Kept next to the book and

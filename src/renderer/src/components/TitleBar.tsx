@@ -6,10 +6,13 @@ export default function TitleBar() {
   const [maximized, setMaximized] = useState(false)
 
   useEffect(() => {
+    if (!window.electronAPI?.window) return
     window.electronAPI.window.isMaximized().then(setMaximized)
     const unsub = window.electronAPI.window.onMaximizeChange(setMaximized)
     return unsub
   }, [])
+
+  if (!window.electronAPI?.window) return null
 
   return (
     <div
