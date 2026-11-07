@@ -1,6 +1,10 @@
 # Bible App — Landing Page
 
-Static single-file landing page for the **Bible App** desktop application by My Digital Solutions.
+The homepage offers **Read the Bible online** at `/read/` alongside the Windows download from GitHub Releases.
+
+Build from the repository root with `npm ci` and `npm run site:build`. The generated `landing/public/` folder contains the homepage and the full browser app under `read/`. Vercel uses `landing/vercel.json` to build both from the repository root and publish `public`. The project must allow source files outside its `landing` root (already enabled for the existing project).
+
+The reader uses relative asset and service-worker URLs so offline caching stays scoped to `/read/`. The generated output is ignored by Git. The older static-only deployment instructions below apply to the homepage alone and do not include the online reader.
 
 ## File structure
 

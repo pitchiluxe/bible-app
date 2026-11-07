@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd .. && ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci",
+  "buildCommand": "cd .. && npm run site:build",
+  "outputDirectory": "public",
+  "trailingSlash": true,
+  "headers": [
+    { "source": "/read/sw.js", "headers": [
+      { "key": "Cache-Control", "value": "no-cache" }
+    ] }
+  ]
+}
